@@ -8,6 +8,21 @@ app.use(express.urlencoded({extended:true}));
 app.set('views', './views');
 app.set('view engine','pug');
 
+const accountSid = 'account_id';
+const authToken = 'your_auth_token';
+const client = require('twilio')(accountSid, authToken);
+
+client.messages
+  .create({
+     body: 'Hey,your name is John!',
+     from: 'xxxxxxxxxx',
+     to: 'xxxxxxxxxx'
+   })
+  .then(message => console.log(message.sid));
+
+
+
+
 var now=moment().format('HH:mm')
 console.log(now);
 app.get('/',(req,res)=>{

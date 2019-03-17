@@ -1,9 +1,32 @@
 const express= require("express")
 const joi=require("joi")
+const moment=require("moment")
 var app=express();
 var port=3000;
+app.use(express.json());
+app.use(express.urlencoded({extended:true}));
+app.set('views', './views');
+app.set('view engine','pug');
 
+var now=moment().format('HH:mm')
+console.log(now);
+app.get('/',(req,res)=>{
+    res.render('home');
+})
 
+app.post('/details',(req,res)=>{
+    const schema = {
+        phone: joi.number().required(),
+        sleep: joi.string().required(),
+        wake: joi.string().required()
+    }
+    const result = joi.validate(req.body, schema)
+    if(result.error) {
+        res.status(404).send(result.error.details[0].message);
+    } else {
+        res.send(result.value)
+    }
+})
 // Make a page that takes:
 //john's phone number
 //john's sleeping time and waking up time

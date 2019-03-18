@@ -2,7 +2,7 @@ const express= require('express')
 const joi=require('joi')
 const moment=require('moment')
 const fs=require('fs')
- var msglog={}
+var msglog={1:[123,123]}
 
 var app=express();
 var port=3000;
@@ -26,7 +26,6 @@ var arr=data.toString().split('\r\n')
 var accountSid=arr[0];
 var authToken=arr[1];
 var sender=arr[2];
-var recv=arr[3];
 
 app.get('/',(req,res)=>{
     res.render('home');
@@ -44,23 +43,30 @@ app.post('/details',(req,res)=>{
     } else {
         phone=result.value.phone;
         //will call the send sms function every hour
-        var now=moment().format('HH:mm');
-        if(now > result.value.wake && now < result.value.sleep ){
-            setInterval(sendsms,10000 );
-        }
-        else{
-            res.send("Sleeping time");
-        }
+        setInterval(function(){
+            var timenow=moment().format('HH:mm');
+            var sleep= moment(result.value.sleep, 'HH:mm');
+            var wake = moment(result.value.wake, 'HH:mm');
+            if(moment().isBetween(sleep,wake)){
+                console.log("Sleeping time");
+                sleep(10000);
+            }
+            else{
+                sendsms(phone);
+            }
+        },3600000);
+
         res.send(result.value)
     }
 })
+
+// for the logs of sent and failed messages
 app.get('/logs',(req,res)=>{
     var time = moment(start).fromNow(true);
     console.log(msglog);
     res.render('logs',{time,msglog});
 });
 
-//log of sent and failed messages
 
 
 
@@ -86,8 +92,10 @@ function sendsms(phone){
     .then(
         message => {console.log(message.sid,message.status)
 
-            var msgtime=moment().format('HH:mm');
-            var arr=[message.status,msgTime];
+            var msgtime=moment().format('YYYY-MM-DDTHH:mm:ss');
+            var arr=[];
+            arr.push(message.status);
+            arr.push(msgtime)
             msglog[message.sid]=arr;
 
             if(message.status =='failed' ||message.status =='undelivered'){
@@ -100,13 +108,15 @@ function sendsms(phone){
                     })
                     .then(
                         message => {console.log(message.sid)
-                        var msgtime=moment().format('HH:mm');
+                        var msgtime=moment().format('YYYY-MM-DDTHH:mm:ss');
                         if(message.status === 'delivered' ||message.status === 'sent' ||message.status === 'queued'){
                             flag='sent';
                             }
                             cnt++;
                             console.log(cnt);
-                            var arr=[message.status,msgTime];
+                            var arr=[];
+                            arr.push(message.status);
+                            arr.push(msgtime)
                             msglog[message.sid]=arr;
                         }
                         
@@ -116,9 +126,7 @@ function sendsms(phone){
         }
     );
 }
-function test(){
-    console.log("hey");
-}
+
 app.listen(port)
 start=moment().format('YYYY-MM-DDTHH:mm:ss')
 console.log("Server is up and running on Port :",port);

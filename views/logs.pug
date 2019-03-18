@@ -2,7 +2,9 @@ html
     div
         h1 Welcome John :)
         h3 The Total time for which the server has been running is : #{time}
+        hr
+        h2 Message Log:
         each val,key in msglog
-            li=key + ': ' + val
+            li=' Message Sid : ' + key + ' Message Status: ' + val[0] +' Sent on: '+ val[1]
 
              

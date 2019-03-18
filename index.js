@@ -1,6 +1,7 @@
 const express= require("express")
 const joi=require("joi")
 const moment=require("moment")
+const fs=require('fs')
 var app=express();
 var port=3000;
 app.use(express.json());
@@ -8,19 +9,19 @@ app.use(express.urlencoded({extended:true}));
 app.set('views', './views');
 app.set('view engine','pug');
 
-const accountSid = 'account_id';
-const authToken = 'your_auth_token';
-const client = require('twilio')(accountSid, authToken);
-
-client.messages
-  .create({
-     body: 'Hey,your name is John!',
-     from: 'xxxxxxxxxx',
-     to: 'xxxxxxxxxx'
-   })
-  .then(message => console.log(message.sid));
 
 
+
+const readFileData = (filename) => (
+	new Promise((resolve, reject) => {
+		fs.readFile(filename, (err, data) => {
+			if(err) {
+				reject('File Name is invalid')
+			}
+			resolve(data)
+        })
+    })
+)
 
 
 var now=moment().format('HH:mm')
@@ -54,8 +55,34 @@ app.post('/details',(req,res)=>{
 app.get('*',(req,res)=>{
     res.send("This is not a valid URL");
     });
-    app.post('*',(req,res)=>{
-        res.send("This is not a valid URL");
-        });
-    app.listen(port)
-    console.log("The app is up and running on Port :",port);
+app.post('*',(req,res)=>{
+    res.send("This is not a valid URL");
+    });
+var secrets = {}
+portNum = 3000
+
+
+readFileData('secrets.txt').then((data) => {
+    var arr=data.toString().split('\r\n')
+    console.log(arr.toString());
+    secrets['accountSid']=arr[0];
+    secrets['authToken']=arr[1];
+    secrets['sender']=arr[2];
+    secrets['recv']=arr[3];
+    console.log(secrets)
+
+    const client = require('twilio')(secrets['accountSid'], secrets['authToken']);
+    client.messages
+    .create({
+        body: 'Hey , your name is John!',
+        from: secrets['sender'],
+        to: secrets['recv']
+    })
+    .then(
+        message => console.log(message.sid)
+        );
+    
+}).then(app.listen(portNum))
+.catch((message) => console.log(message))
+
+

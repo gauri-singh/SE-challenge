@@ -1,0 +1,26 @@
+{
+  "name": "se-challenge",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gauri-singh/SE-challenge.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/gauri-singh/SE-challenge/issues"
+  },
+  "homepage": "https://github.com/gauri-singh/SE-challenge#readme",
+  "dependencies": {
+    "express": "^4.16.4",
+    "joi": "^14.3.1",
+    "moment": "^2.24.0",
+    "node-schedule": "^1.3.2",
+    "pug": "^2.0.3"
+  }
+}

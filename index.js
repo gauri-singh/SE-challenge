@@ -2,7 +2,9 @@ const express= require('express')
 const joi=require('joi')
 const moment=require('moment')
 const fs=require('fs')
-var msglog={1:[123,123]}
+// a dictionary which saves the message logs in format
+//msglog[messagSid]=[message status, time at which message was sent]
+var msglog={}
 
 var app=express();
 var port=3000;
@@ -16,24 +18,26 @@ var file = 'secrets.txt';
 var data= '';
 var phone;
 if(!fs.existsSync(file)) {
-  res.send("File not found, please create a secrets file with details");
+  console.log("File not found, please create a secrets file with the details");
+  process.exit(1);
 }
 else {
   data= fs.readFileSync(file);
 }
 
-var arr=data.toString().split('\r\n')
-var accountSid=arr[0];
-var authToken=arr[1];
-var sender=arr[2];
+var arr=data.toString().split('\n')
+var accountSid=arr[0].trim();
+var authToken=arr[1].trim();
+var sender=arr[2].trim();
 
 app.get('/',(req,res)=>{
     res.render('home');
 })
 
+// Validates the input and calls the send sms function every hour
 app.post('/details',(req,res)=>{
     const schema = {
-        phone: joi.number().required(),
+        phone: joi.string().required(),
         sleep: joi.string().required(),
         wake: joi.string().required()
     }
@@ -49,44 +53,32 @@ app.post('/details',(req,res)=>{
             var wake = moment(result.value.wake, 'HH:mm');
             if(moment().isBetween(sleep,wake)){
                 console.log("Sleeping time");
-                sleep(10000);
             }
             else{
                 sendsms(phone);
             }
-        },3600000);
+        },(60*60*1000));
 
-        res.send(result.value)
+        res.redirect('/logs');
     }
 })
 
 // for the logs of sent and failed messages
 app.get('/logs',(req,res)=>{
     var time = moment(start).fromNow(true);
-    console.log(msglog);
+    
     res.render('logs',{time,msglog});
 });
 
-
-
-
-
-app.get('*',(req,res)=>{
-    res.send("This is not a valid URL");
-    });
-app.post('*',(req,res)=>{
-    res.send("This is not a valid URL");
-    });
-
-
-
+// Uses the Twilio API to send the sms to the given number
+//if the message is not 'sent' or 'delivered' the function tries 5 times to send the message
 function sendsms(phone){
     var cnt=1; var flag='not'
     const client = require('twilio')(accountSid, authToken);
     client.messages.create({
         body: 'Hey , your name is John!',
         from: sender,
-        to: recv,
+        to: phone,
         statusCallback: 'http://postb.in/1234abcd',
     })
     .then(
@@ -103,13 +95,13 @@ function sendsms(phone){
                     client.messages.create({
                     body: 'Hey , your name is John!',
                     from: sender,
-                    to: recv,
+                    to: phone,
                     statusCallback: 'http://postb.in/1234abcd'
                     })
                     .then(
                         message => {console.log(message.sid)
                         var msgtime=moment().format('YYYY-MM-DDTHH:mm:ss');
-                        if(message.status === 'delivered' ||message.status === 'sent' ||message.status === 'queued'){
+                        if(message.status === 'delivered' ||message.status === 'sent'){
                             flag='sent';
                             }
                             cnt++;
@@ -126,6 +118,13 @@ function sendsms(phone){
         }
     );
 }
+
+app.get('*',(req,res)=>{
+    res.send("This is not a valid URL");
+    });
+app.post('*',(req,res)=>{
+    res.send("This is not a valid URL");
+    });
 
 app.listen(port)
 start=moment().format('YYYY-MM-DDTHH:mm:ss')

@@ -3,8 +3,8 @@ html
         h1 Welcome John :)
         h3 Please Enter the following details to enable the messaging service
     form(action="/details" method="POST")
-        label Phone number 
-        input(type="tel" minlength="10" maxlength="10" id="phone" name="phone" title="10 digit mobile number" required)
+        label Phone number (with country code, eg- +91xxxxxxxxxx)
+        input(type="tel" minlength="11" maxlength="13" id="phone" name="phone" title="10 digit mobile number with country code" required)
         br
         label When do you sleep? 
         input(type="time" id="sleep" name="sleep" required)
